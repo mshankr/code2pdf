@@ -28,6 +28,7 @@ Open a terminal in your desired directory and run:
 
     code2pdf .
 
+```
 You can use flags as such:
     -h, --help                       Display this screen
     -v, --version                    Display version
@@ -36,7 +37,7 @@ You can use flags as such:
     -m, --margin_lr=0.3              Left and right margins (in inches)
     -l, --enable_lineno=true         Enable line numbers in code?
     -t, --theme=github               Syntax highlighting theme to use: github (default) / base16_light / base16_dark / colorful / gruvbox_light / gruvbox_dark / igor_pro / magritte / molokai / monokai / monokai_sublime / pastie / thankful_eyes / tulip
-
+```
 
 ## BlackList file example:
 
