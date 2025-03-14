@@ -14,7 +14,7 @@ class ConvertToPDF
     elsif !params.key?(:to) || params[:to].nil?
       raise ArgumentError.new 'where should I save the generated pdf file?'
     else
-      @from, @to, @except = params[:from], params[:to], params[:except].to_s
+      @from, @to, @except, @theme_name, @font_size, @enable_lineno, @margin_lr = params[:from], params[:to], params[:except].to_s, params[:theme], params[:font_size], params[:enable_lineno], params[:margin_lr]
 
       if File.exist?(@except) && invalid_blacklist?
         raise LoadError.new "#{@except} is not a valid blacklist YAML file"
@@ -33,7 +33,24 @@ class ConvertToPDF
   def pdf
     html ||= ''
 
-    style = 'size: 12px; font-family: Helvetica, sans-serif;'
+    if @font_size.nil?
+      @font_size = 16
+    end
+
+    if @margin_lr.nil?
+      @margin_lr = 0.3
+    end
+
+    if @enable_lineno.nil?
+      @enable_lineno = true
+    end
+
+    style = "size: #{@font_size}; font-family: Helvetica, sans-serif; font-size: #{@font_size}px;"
+
+    html += "<style> .table_style { font-size: #{@font_size}px; } </style>"
+    if !@enable_lineno
+      html += "<style> .gutter_style { display: none; } </style>"
+    end
 
     read_files.each do |file|
       html += "<strong style='#{style}'>File: #{file.first}</strong></br></br>"
@@ -41,8 +58,7 @@ class ConvertToPDF
       html += add_space(30)
     end
 
-    @kit = PDFKit.new(html, page_size: 'A4')
-    @kit
+    PDFKit.new(html, page_size: 'A4', margin_left: @margin_lr+'in', margin_right: @margin_lr+'in')
   end
 
   def syntax_highlight(file)
@@ -50,9 +66,41 @@ class ConvertToPDF
     file_lexer = Rouge::Lexer.find(file_type)
     return CGI.escapeHTML(file.last) unless file_lexer
 
-    theme = Rouge::Themes::Base16.mode(:light)
+    if @theme_name == "github"
+      theme = Rouge::Themes::Github.new
+    elsif @theme_name == "bw"
+      theme = Rouge::Themes::BlackWhiteTheme
+    elsif @theme_name == "colorful"
+      theme = Rouge::Themes::Colorful
+    elsif @theme_name == "gruvbox_light"
+      theme = Rouge::Themes::Gruvbox.mode(:light)
+    elsif @theme_name == "gruvbox_dark"
+      theme = Rouge::Themes::Gruvbox.mode(:dark)
+    elsif @theme_name == "igor_pro"
+      theme = Rouge::Themes::IgorPro
+    elsif @theme_name == "magritte"
+      theme = Rouge::Themes::Magritte
+    elsif @theme_name == "molokai"
+      theme = Rouge::Themes::Molokai
+    elsif @theme_name == "monokai"
+      theme = Rouge::Themes::Monokai
+    elsif @theme_name == "monokai_sublime"
+      theme = Rouge::Themes::MonokaiSublime
+    elsif @theme_name == "pastie"
+      theme = Rouge::Themes::Pastie
+    elsif @theme_name == "thankful_eyes"
+      theme = Rouge::Themes::ThankfulEyes
+    elsif @theme_name == "tulip"
+      theme = Rouge::Themes::Tulip
+    elsif @theme_name == "base16_light"
+      theme = Rouge::Themes::Base16.mode(:light)
+    elsif @theme_name == "base16_dark"
+      theme = Rouge::Themes::Base16.mode(:dark)
+    else theme = Rouge::Themes::Github.new
+    end
+
     formatter = Rouge::Formatters::HTMLInline.new(theme)
-    formatter = Rouge::Formatters::HTMLTable.new(formatter, start_line: 1)
+    formatter = Rouge::Formatters::HTMLTable.new(formatter, start_line: 1, table_class: 'table_style', gutter_class: 'gutter_style')
     code_data = file.last.encode('UTF-8', 'binary', invalid: :replace, undef: :replace, replace: '')
     formatter.format(file_lexer.lex(code_data))
   end
@@ -85,7 +133,7 @@ class ConvertToPDF
 
   def read_files(path = nil)
     @files ||= []
-    path   ||= @from
+    path ||= @from
 
     Dir.foreach(path) do |item|
       item_path = "#{path}/#{item}"

@@ -4,9 +4,12 @@ require 'rubygems'
 require 'optparse'
 $:.push File.expand_path('../../lib', __FILE__)
 require 'code2pdf'
+require 'rbconfig'
+
+options = { theme: 'github', font_size: '16', filename: '_', margin_lr: '0.3', enable_lineno: true }
 
 optparse = OptionParser.new do |opts|
-  opts.banner = "Usage: code2pdf <project path>\n\nYou can use flags as such:"
+  opts.banner = "Usage: code2pdf [OPTIONS] <project path>\n\nYou can use flags as such:"
 
   opts.on('-h', '--help', 'Display this screen') do
     puts opts
@@ -19,6 +22,34 @@ optparse = OptionParser.new do |opts|
     exit
   end
 
+  opts.on('-o', '--output=source_code', 'Output PDF file name') do |fn|
+    options[:filename] = fn
+  end
+
+  opts.on('-f', '--fontsize=16', 'File font size (in px)') do |fs|
+    options[:font_size] = fs
+  end
+
+  opts.on('-m', '--margin_lr=0.3', 'Left and right margins (in inches)') do |m|
+    options[:margin_lr] = m
+  end
+
+  opts.on('-l', '--enable_lineno=true', 'Enable line numbers in code?') do |ln|
+    if ln.downcase == "true"
+      options[:enable_lineno] = true
+    else
+      options[:enable_lineno] = false
+    end
+  end
+
+  opts.on('-t', '--theme=github', String, 'Syntax highlighting theme to use: github (default) / base16_light / base16_dark / colorful / gruvbox_light / gruvbox_dark / igor_pro / magritte / molokai / monokai / monokai_sublime / pastie / thankful_eyes / tulip') do |t|
+    options[:theme] = t
+  end
+
+  # opts.on("-f", "--from=DIR", String, "Source dir") do |f|
+  #   options[:from] = f
+  # end
+
   if ARGV.empty?
     puts opts
     exit 1
@@ -26,14 +57,23 @@ optparse = OptionParser.new do |opts|
 end
 
 begin
-  optparse.parse!
+  rest = optparse.parse!
 rescue OptionParser::InvalidOption => exception
   puts exception
   exit 1
 end
 
-PATH = ARGV[0].gsub(/\/$/, '')
+if rest.empty? && options[:from] == nil
+  puts optparse
+  exit 1
+elsif options[:from] == nil
+  options[:from] = rest[0];
+# elsif options[:to] == nil
+#   options[:to] = "_"
+end
+
+PATH = options[:from].gsub(/\/$/, '')
 BLACK_LIST_YAML_FILE = "#{PATH}/.code2pdf".freeze
 
-filename = "#{PATH.gsub(/(\.|\/)/, '_')}.pdf"
-ConvertToPDF.new from: PATH, to: filename, except: BLACK_LIST_YAML_FILE
+filename = "#{options[:filename]}.pdf"
+ConvertToPDF.new from: PATH, to: filename, except: BLACK_LIST_YAML_FILE, theme: options[:theme], font_size: options[:font_size], enable_lineno: options[:enable_lineno], margin_lr: options[:margin_lr]

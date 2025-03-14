@@ -4,17 +4,39 @@
 
 **code2pdf** is a simple tool for convert your source code to a PDF file.
 
-It can be useful if you need to licence you software.
+NOTE: Original code by Lucas Caton. This fork adds more styling options
 
 ## Installation
+
+To run this edition, you have to download this code and locally install the Ruby gem.
+
+    gem build code2pdf.gemspec
+
+This will build a local gem 'code2pdf-0.4.3.gem'. Then install:
+
+    gem install code2pdf-0.4.3.gem
+
+Now you're good to go.
+
+Original gem is in the rubygems website repo:
 
     gem install code2pdf
 
 ## Usage
 
-Open a terminal and run:
+Open a terminal in your desired directory and run:
 
-    code2pdf
+    code2pdf .
+
+You can use flags as such:
+    -h, --help                       Display this screen
+    -v, --version                    Display version
+    -o, --output=source_code         Output PDF file name
+    -f, --fontsize=16                File font size (in px)
+    -m, --margin_lr=0.3              Left and right margins (in inches)
+    -l, --enable_lineno=true         Enable line numbers in code?
+    -t, --theme=github               Syntax highlighting theme to use: github (default) / base16_light / base16_dark / colorful / gruvbox_light / gruvbox_dark / igor_pro / magritte / molokai / monokai / monokai_sublime / pastie / thankful_eyes / tulip
+
 
 ## BlackList file example:
 
